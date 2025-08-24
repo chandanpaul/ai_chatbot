@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regional Chatbot</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Regional Language Chatbot</h1>
+        <div class="language-selector">
+            <label for="language">Select Language:</label>
+            <select id="language">
+                {% for code, name in languages.items() %}
+                <option value="{{ code }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="chat-box" id="chatBox">
+            <!-- Messages will appear here -->
+        </div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    <script>
+        const socket = io();
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        const languageSelector = document.getElementById('language');
+
+        function sendMessage() {
+            const message = userInput.value;
+            const language = languageSelector.value;
+            if (message.trim() !== '') {
+                appendMessage('You: ' + message, 'user-message');
+                socket.emit('message', { message, language });
+                userInput.value = '';
+            }
+        }
+
+        socket.on('response', (data) => {
+            appendMessage('Bot: ' + data.response, 'bot-message');
+        });
+
+        function appendMessage(message, className) {
+            const messageElement = document.createElement('div');
+            messageElement.className = className;
+            messageElement.textContent = message;
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
